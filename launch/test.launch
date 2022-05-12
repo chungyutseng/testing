@@ -1,0 +1,17 @@
+<launch>
+	<!-- <node pkg="testing" type="repub_imu.py" name="repub_imu" output="screen"/> -->
+    <!-- <node pkg="testing" type="kf_x.py" name="kf_x" output="screen"/> -->
+    <!-- <node pkg="testing" type="kf_y.py" name="kf_y" output="screen"/> -->
+    <!-- <node pkg="testing" type="kf_z.py" name="kf_z" output="screen"/> -->
+    <!-- <node pkg="testing" type="kf_drone1.py" name="kf_drone1" output="screen"/> -->
+    <node pkg="testing" type="kf_x.py" name="kf_x" output="screen"/>
+    <!-- <node pkg="testing" type="lowpass_filter_3.py" name="lowpass_filter" output="screen"/> -->
+    <!-- <node pkg="testing" type="aruco_positioning.py" name="aruco_positioning" output="screen"/> -->
+	<!-- <node pkg="keyboard_control_tello" type="fly_cmd.py" name="cmd" output="screen"/> -->
+    <!-- <node pkg="image_transport" name="image_compressed1" output="screen" type="republish" args="h264 in:=/drone2/tello/image_raw raw out:=raw_image" /> -->
+    <node pkg="rosbag" type="play" name="player" args="--clock /home/chungyu/.ros/drone.bag"/>
+    <node name="record_topics_for_verification" pkg="rosbag" type="record" args="-a -o replay -x /raw_image"/>
+    <!-- <node name="record_topics_for_verification" pkg="rosbag" type="record" args="-a -o data1"/> -->
+    <!-- <node name="record_topics_for_verification" pkg="rosbag" type="record" output="screen"
+        args="-a -o data"/>  -->
+</launch>
