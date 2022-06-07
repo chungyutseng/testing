@@ -36,7 +36,9 @@ my_namespace=rospy.get_namespace()
 tello_pose_kf = np.zeros((13,), dtype=np.float32)
 # temp_imu = np.zeros((6,), dtype=np.float32)
 
-pub_pose_kf = rospy.Publisher('tello_pose_kf_replay', numpy_msg(Floats), queue_size=10)
+pub_pose_kf = rospy.Publisher('tello_pose_kf', numpy_msg(Floats), queue_size=10)
+
+pub_kf_R_value = rospy.Publisher('kf_R_value', numpy_msg(Floats), queue_size=10)
 
 dt = 1.0/15
 
@@ -54,13 +56,13 @@ Q_x_vel = 0.01
 Q_x_vel_drift = 0.0001
 Q_x = np.array([[Q_x_pos, 0.0, 0.0], [0.0, Q_x_vel, 0.0], [0.0, 0.0, Q_x_vel_drift]], dtype = np.float32)
 
-# if my_namespace=="/drone1/":
-#     R_position_x = 1.5
-#     R_velocity_x = 1
+if my_namespace=="/drone1/":
+    R_position_x = 1.5
+    R_velocity_x = 1
 
-# if my_namespace=="/drone2/":
-R_position_x = 8
-R_velocity_x = 1
+if my_namespace=="/drone2/":
+    R_position_x = 8
+    R_velocity_x = 1
 
 # Q_y = 0.1 * np.identity(3)
 Q_y_pos = 0.01
@@ -68,13 +70,13 @@ Q_y_vel = 0.01
 Q_y_vel_drift = 0.0001
 Q_y = np.array([[Q_y_pos, 0.0, 0.0], [0.0, Q_y_vel, 0.0], [0.0, 0.0, Q_y_vel_drift]], dtype = np.float32)
 
-# if my_namespace=="/drone1/":
-#     R_position_y = 1
-#     R_velocity_y = 1
+if my_namespace=="/drone1/":
+    R_position_y = 1
+    R_velocity_y = 1
 
-# if my_namespace=="/drone2/":
-R_position_y = 3
-R_velocity_y = 1
+if my_namespace=="/drone2/":
+    R_position_y = 3
+    R_velocity_y = 1
 
 # Q_z = 0.1 * np.identity(3)
 Q_z_pos = 0.001
@@ -82,13 +84,13 @@ Q_z_vel = 0.001
 Q_z_vel_drift = 0.0000001
 Q_z = np.array([[Q_z_pos, 0.0, 0.0], [0.0, Q_z_vel, 0.0], [0.0, 0.0, Q_z_vel_drift]], dtype = np.float32)
 
-# if my_namespace=="/drone1/":
-#     R_position_z = 1.5
-#     R_velocity_z = 1
+if my_namespace=="/drone1/":
+    R_position_z = 1.5
+    R_velocity_z = 1
 
-# if my_namespace=="/drone2/":
-R_position_z = 8
-R_velocity_z = 1
+if my_namespace=="/drone2/":
+    R_position_z = 8
+    R_velocity_z = 1
 
 P = 0.2 * np.identity(3)
 X = np.zeros((3, 1), dtype = np.float32)
@@ -100,13 +102,16 @@ A_yaw = np.array([[1.0, dt], [0.0, 1.0]], dtype = np.float32)
 C_yaw = np.array([1.0, 0.0], dtype = np.float32).reshape(1, 2)
 Q_yaw = 0.1 * np.identity(2)
 
-# if my_namespace=="/drone1/":
-#     R_yaw_marker = 0.2
-#     R_yaw_imu = 0.5
+if my_namespace=="/drone1/":
+    R_yaw_marker = 0.2
+    R_yaw_imu = 0.5
 
-# if my_namespace=="/drone2/":
-R_yaw_marker = 1
-R_yaw_imu = 1
+if my_namespace=="/drone2/":
+    R_yaw_marker = 0.5
+    R_yaw_imu = 0.5
+
+kf_R_value = np.array([R_position_x, R_velocity_x, R_position_y, R_velocity_y, R_position_z, R_velocity_z, R_yaw_marker, R_yaw_imu], dtype=np.float32)
+pub_kf_R_value.publish(kf_R_value)
 
 P_yaw = 0.2 * np.identity(2)
 X_yaw = np.zeros((2, 1), dtype = np.float32)
@@ -193,70 +198,70 @@ def get_imu_message(imu_msg):
     # global temp_imu
     temp_imu = imu_msg.data
 
-    # if my_namespace=="/drone1/":
-    #     # drone_x.correction()
-    #     # drone_y.correction()
-    #     # drone_z.correction()
-    #     # drone_yaw.correction_yaw()
-    drone_x.update_v(temp_imu[0])
-    drone_y.update_v(temp_imu[1])
-    drone_z.update_v(temp_imu[2])
-    drone_yaw.update_yaw_imu(temp_imu[3])
+    if my_namespace=="/drone1/":
+        # drone_x.correction()
+        # drone_y.correction()
+        # drone_z.correction()
+        # drone_yaw.correction_yaw()
+        drone_x.update_v(temp_imu[0])
+        drone_y.update_v(temp_imu[1])
+        drone_z.update_v(temp_imu[2])
+        drone_yaw.update_yaw_imu(temp_imu[3])
 
-    # if my_namespace=="/drone2/":
-    #     if small_marker == 0.0:
-    #         # drone_x.correction()
-    #         # drone_y.correction()
-    #         # drone_z.correction()
-    #         # drone_yaw.correction_yaw()
-    #         drone_x.update_v(temp_imu[0])
-    #         drone_y.update_v(temp_imu[1])
-    #         drone_z.update_v(temp_imu[2])
-    #         drone_yaw.update_yaw_imu(temp_imu[3])
+    if my_namespace=="/drone2/":
+        if small_marker == 0.0:
+            # drone_x.correction()
+            # drone_y.correction()
+            # drone_z.correction()
+            # drone_yaw.correction_yaw()
+            drone_x.update_v(temp_imu[0])
+            drone_y.update_v(temp_imu[1])
+            drone_z.update_v(temp_imu[2])
+            drone_yaw.update_yaw_imu(temp_imu[3])
 
 def get_marker_message(marker_msg):
     global drone_x, drone_y, drone_z, drone_yaw
     temp = marker_msg.data
 
-    # if my_namespace=="/drone1/":
-    #     # drone_x.correction()
-    #     # drone_y.correction()
-    #     # drone_z.correction()
-    #     # drone_yaw.correction_yaw()
-    #     drone_x.update_p(temp[0])
-    #     drone_y.update_p(temp[1])
-    #     drone_z.update_p(temp[2])
-    #     drone_yaw.update_yaw_marker(temp[4])
+    if my_namespace=="/drone1/":
+        # drone_x.correction()
+        # drone_y.correction()
+        # drone_z.correction()
+        # drone_yaw.correction_yaw()
+        drone_x.update_p(temp[0])
+        drone_y.update_p(temp[1])
+        drone_z.update_p(temp[2])
+        drone_yaw.update_yaw_marker(temp[4])
 
-    # if my_namespace=="/drone2/":
-    #     if small_marker == 0.0:
-    #         # drone_x.correction()
-    #         # drone_y.correction()
-    #         # drone_z.correction()
-    #         # drone_yaw.correction_yaw()
-    drone_x.update_p(temp[0])
-    drone_y.update_p(temp[1])
-    drone_z.update_p(temp[2])
+    if my_namespace=="/drone2/":
+        if small_marker == 0.0:
+            # drone_x.correction()
+            # drone_y.correction()
+            # drone_z.correction()
+            # drone_yaw.correction_yaw()
+            drone_x.update_p(temp[0])
+            drone_y.update_p(temp[1])
+            drone_z.update_p(temp[2])
             # drone_yaw.update_yaw_marker(temp[4])
 
 def get_marker_lp_message(marker_lp_msg):
     global drone_x, drone_y, drone_z, drone_yaw
     temp = marker_lp_msg.data
 
-    # if my_namespace=="/drone2/":
-    #     if small_marker == 1.0:
-    #         # drone_x.correction()
-    #         # drone_y.correction()
-    #         # drone_z.correction()
-    #         # drone_yaw.correction_yaw()
-    #         # drone_x.update_p(temp[0])
-    #         # drone_y.update_p(temp[1])
-    #         # drone_z.update_p(temp[2])
-    drone_yaw.update_yaw_marker(temp[4])
+    if my_namespace=="/drone2/":
+        if small_marker == 0.0:
+            # drone_x.correction()
+            # drone_y.correction()
+            # drone_z.correction()
+            # drone_yaw.correction_yaw()
+            # drone_x.update_p(temp[0])
+            # drone_y.update_p(temp[1])
+            # drone_z.update_p(temp[2])
+            drone_yaw.update_yaw_marker(temp[4])
 
-rospy.Subscriber("/drone2/repub_imu", numpy_msg(Floats), callback=get_imu_message)
-rospy.Subscriber("/drone2/tello_pose_marker", numpy_msg(Floats), callback=get_marker_message)
-rospy.Subscriber("/drone2/tello_pose_marker_lp", numpy_msg(Floats), callback=get_marker_lp_message)
+rospy.Subscriber("repub_imu", numpy_msg(Floats), callback=get_imu_message)
+rospy.Subscriber("tello_pose_marker", numpy_msg(Floats), callback=get_marker_message)
+rospy.Subscriber("tello_pose_marker_lp", numpy_msg(Floats), callback=get_marker_lp_message)
 
 while not rospy.is_shutdown():
     # drone_x.correction()
